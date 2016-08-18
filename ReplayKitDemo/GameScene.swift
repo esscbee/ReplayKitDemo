@@ -9,13 +9,47 @@
 import SpriteKit
 import GameplayKit
 
+protocol GameDelegate : class {
+    func showRecordButton()
+    func showStopButton()
+}
 
+class MSReplayKitState : GKState {
+    var gameDelegate : GameDelegate
+    init(gameDelegate: GameDelegate) {
+        self.gameDelegate = gameDelegate
+    }
+    
+}
 
-class GameScene: SKScene {
+class MSWaitRecordState : MSReplayKitState {
+    
+}
+
+class MSRecordButtonDownState : MSReplayKitState {
+    
+}
+
+class MSRecordingState : MSReplayKitState {
+    
+}
+
+class MSStopButtonDownState : MSReplayKitState {
+    
+}
+
+class MSPreviewingState : MSReplayKitState {
+    
+}
+
+class GameScene: SKScene, GameDelegate {
     
     private var label : SKLabelNode?
     private var spinnyNode : SKShapeNode?
+    private var stopButton : SKShapeNode?
     private var recordButton : SKShapeNode?
+    
+    private var stateMachine : GKStateMachine!
     
     override func didMove(to view: SKView) {
         
@@ -38,6 +72,7 @@ class GameScene: SKScene {
                                               SKAction.fadeOut(withDuration: 0.5),
                                               SKAction.removeFromParent()]))
         }
+        // create record / stop buttons
         
         let recordRadius = frame.width / 12.0
         let bottomY = frame.midY - frame.height / 2.0
@@ -46,10 +81,53 @@ class GameScene: SKScene {
             recordButton.position = CGPoint(x:frame.midX, y:bottomY + 2 * recordRadius)
             recordButton.fillColor = UIColor.red
             recordButton.strokeColor = UIColor.black
+            recordButton.alpha = 0.0
             self.addChild(recordButton)
+            
+            let cornerRadius : CGFloat = 10.0
+
+            self.stopButton = SKShapeNode(rectOf: CGSize(width: recordRadius * 2.0, height: recordRadius * 2.0), cornerRadius: cornerRadius)
+            if let stopButton = self.stopButton {
+                stopButton.position = recordButton.position
+                stopButton.fillColor = UIColor.darkGray
+                self.addChild(stopButton)
+                let sub = SKShapeNode(rectOf: CGSize(width: recordRadius, height: recordRadius), cornerRadius: cornerRadius)
+                sub.fillColor = UIColor.lightGray
+                stopButton.addChild(sub)
+                stopButton.alpha = 0.0
+            }
+        }
+        // initialize state machine
+        
+    }
+    
+    func showButtons(record: Bool, stop: Bool) {
+        if let rb = recordButton {
+            rb.alpha = record ? 1.0 : 0.0
+        }
+        if let sb = stopButton {
+            sb.alpha = stop ? 1.0 : 0.0
         }
     }
     
+    func showStopButton() {
+        showButtons(record: false, stop: true)
+    }
+    func showRecordButton() {
+        showButtons(record: true, stop: false)
+    }
+    
+    func initStateMachine() {
+        self.stateMachine = GKStateMachine(states: [
+            MSWaitRecordState(gameDelegate: self),
+            MSRecordButtonDownState(gameDelegate: self),
+            MSRecordingState(gameDelegate: self),
+            MSStopButtonDownState(gameDelegate: self),
+            MSPreviewingState(gameDelegate: self),
+            
+            ])
+        
+    }
     
     func touchDown(atPoint pos : CGPoint) {
         if let n = self.spinnyNode?.copy() as! SKShapeNode? {
