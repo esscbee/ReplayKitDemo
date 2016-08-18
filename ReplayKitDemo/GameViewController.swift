@@ -9,17 +9,46 @@
 import UIKit
 import SpriteKit
 import GameplayKit
+import ReplayKit
 
-class GameViewController: UIViewController {
+class GameViewController: UIViewController, RPPreviewViewControllerDelegate, RecorderDelegate {
+    
+    
+    
+    func startRecording() {
+        let recorder = RPScreenRecorder.shared()
+        
+        recorder.startRecording(handler: { (error) in
+            if let unwrappedError = error {
+                print("Start Recording: ", unwrappedError.localizedDescription)
+            }
+        })
+    }
+    
+    func stopRecording() {
+        let recorder = RPScreenRecorder.shared()
+        
+        recorder.stopRecording(handler:  { [unowned self] (preview, error) in
+            if let unwrappedPreview = preview {
+                unwrappedPreview.previewControllerDelegate = self
+                self.present(unwrappedPreview, animated: true, completion: nil)
+            }
+        })
+    }
+    
+    func previewControllerDidFinish(previewController: RPPreviewViewController) {
+        dismiss(animated: true, completion: nil)
+    }
 
-    override func viewDidLoad() {
+override func viewDidLoad() {
         super.viewDidLoad()
         
         if let view = self.view as! SKView? {
             // Load the SKScene from 'GameScene.sks'
-            if let scene = SKScene(fileNamed: "GameScene") {
+            if let scene = GameScene(fileNamed: "GameScene") {
                 // Set the scale mode to scale to fit the window
                 scene.scaleMode = .aspectFill
+                scene.setRecorderDelegate(self)
                 
                 // Present the scene
                 view.presentScene(scene)

@@ -9,172 +9,10 @@
 import SpriteKit
 import GameplayKit
 
-protocol GameDelegate : class {
-    func showRecordButton()
-    func showStopButton()
-    func highlightRecordButton(highlight: Bool)
-    func highlightStopButton(highlight: Bool)
-    func buttonTouch(_ touch : UITouch?) -> Bool
-    func enterState(_ state: MSReplayKitState.Type) -> MSReplayKitState?
-}
 
-class MSReplayKitState : GKState {
-    weak var gameDelegate : GameDelegate?
-    weak var trackTouch : UITouch?
-    init(gameDelegate: GameDelegate) {
-        self.gameDelegate = gameDelegate
-    }
-    
-    //
-    // called when the record/stop button has been touched. return true to consume
-    //
-    func touchBegan(_ touch: UITouch) -> Bool {
-        return true
-    }
-    //
-    // calleed when button touch has moved. return true to consume
-    //
-    func touchMoved(_ onButton: Bool) -> Bool {
-        return false
-    }
-    
-    //
-    // called when button touch has ended. return true to consume.
-    //
-    func touchEnded(_ onButton: Bool) -> Bool {
-        return false
-    }
-    
-    //
-    // return true if the state consumed the touchesCancelled
-    //
-    func touchCancelled(_ onButton: Bool) -> Bool {
-        return false
-    }
-
-    //
-    // store a touch in the state
-    //
-    func setTouch(_ touch: UITouch) {
-        self.trackTouch = touch
-    }
-
-    //
-    // handle leaving the state
-    //
-    override func willExit(to nextState: GKState) {
-        self.trackTouch = nil
-    }
-    
-    override func didEnter(from previousState: GKState?) {
-        print(self.description)
-    }
-    
-}
-
-class MSWaitRecordState : MSReplayKitState {
-    override func didEnter(from previousState: GKState?) {
-        super.didEnter(from: previousState)
-        if let gd = gameDelegate {
-            gd.highlightRecordButton(highlight: false)
-            gd.showRecordButton()
-        }
-    }
-    
-    override func touchBegan(_ touch: UITouch) -> Bool {
-        if let gd = gameDelegate {
-            if let newState = gd.enterState(MSRecordButtonDownState.self) {
-                newState.setTouch(touch)
-                return true
-            }
-        }
-        return false
-    }
-    
-}
-
-class MSRecordButtonDownState : MSReplayKitState {
-    
-    override func didEnter(from previousState: GKState?) {
-        super.didEnter(from: previousState)
-        if let gd = gameDelegate {
-            gd.highlightRecordButton(highlight: true)
-        }
-    }
-    
-    override func touchMoved(_ onButton: Bool) -> Bool {
-        if let gd = gameDelegate {
-            gd.highlightRecordButton(highlight: onButton)
-        }
-        return true
-    }
-    override func touchCancelled(_ onButton: Bool) -> Bool {
-        if let gd = gameDelegate {
-            let _ = gd.enterState(MSWaitRecordState.self)
-        }
-        return true
-    }
-    override func touchEnded(_ onButton: Bool) -> Bool {
-        if let gd = gameDelegate {
-            let _ = gd.enterState(onButton ? MSRecordingState.self : MSWaitRecordState.self)
-        }
-        return true
-    }
-    
-}
-
-class MSRecordingState : MSReplayKitState {
-    override func didEnter(from previousState: GKState?) {
-        super.didEnter(from: previousState)
-        if let gd = gameDelegate {
-            gd.highlightStopButton(highlight: false)
-            gd.showStopButton()
-        }
-    }
-    override func touchBegan(_ touch: UITouch) -> Bool {
-        if let gd = gameDelegate {
-            if let newState = gd.enterState(MSStopButtonDownState.self) {
-                newState.setTouch(touch)
-                return true
-            }
-        }
-        return false
-    }
-    
-}
-
-class MSStopButtonDownState : MSReplayKitState {
-    override func didEnter(from previousState: GKState?) {
-        if let gd = gameDelegate {
-                gd.highlightStopButton(highlight: true)
-        }
-    }
-    override func touchMoved(_ onButton: Bool) -> Bool {
-        if let gd = gameDelegate {
-            gd.highlightStopButton(highlight: onButton)
-        }
-        return true
-    }
-    override func touchCancelled(_ onButton: Bool) -> Bool {
-        if let gd = gameDelegate {
-            let _ = gd.enterState(MSRecordingState.self)
-        }
-        return true
-    }
-    override func touchEnded(_ onButton: Bool) -> Bool {
-        if let gd = gameDelegate {
-            let _ = gd.enterState(onButton ? MSWaitRecordState.self : MSRecordingState.self)
-        }
-        return true
-    }
-    
-}
-
-class MSPreviewingState : MSReplayKitState {
-    
-}
 
 class GameScene: SKScene, GameDelegate {
+
     
     private var label : SKLabelNode?
     private var spinnyNode : SKShapeNode?
@@ -183,6 +21,8 @@ class GameScene: SKScene, GameDelegate {
     private var buttonNodes = [SKNode]()
     
     private var stateMachine : GKStateMachine!
+    weak var recorderDelegate: RecorderDelegate?
+
     
     override func didMove(to view: SKView) {
         
@@ -236,6 +76,10 @@ class GameScene: SKScene, GameDelegate {
         initStateMachine()
     }
     
+    func setRecorderDelegate(_ recorderDelegate : RecorderDelegate) {
+        self.recorderDelegate = recorderDelegate
+    }
+    
     func showButtons(record: Bool, stop: Bool) {
         if let rb = recordButton {
             rb.alpha = record ? 1.0 : 0.0
@@ -261,7 +105,6 @@ class GameScene: SKScene, GameDelegate {
     
     func touchDown(atPoint pos : CGPoint) {
         if let n = self.spinnyNode?.copy() as! SKShapeNode? {
-            print(pos)
             n.position = pos
             n.strokeColor = SKColor.green
             self.addChild(n)
@@ -396,6 +239,17 @@ class GameScene: SKScene, GameDelegate {
     func highlightRecordButton(highlight: Bool) {
         if let rb = recordButton {
             rb.fillColor = highlight ? UIColor(red: 0.6, green: 0.0, blue: 0.0, alpha: 1.0) : UIColor.red
+        }
+    }
+
+    internal func startRecording() {
+        if let recorderDelegate = recorderDelegate {
+            recorderDelegate.startRecording()
+        }
+    }
+    internal func stopRecording() {
+        if let recorderDelegate = recorderDelegate {
+            recorderDelegate.stopRecording()
         }
     }
 

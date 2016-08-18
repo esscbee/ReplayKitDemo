@@ -17,6 +17,9 @@
 		D6533E4C1D65379800B7120F /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = D6533E4A1D65379800B7120F /* LaunchScreen.storyboard */; };
 		D6533E571D65379800B7120F /* ReplayKitDemoTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D6533E561D65379800B7120F /* ReplayKitDemoTests.swift */; };
 		D6533E621D65379800B7120F /* ReplayKitDemoUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D6533E611D65379800B7120F /* ReplayKitDemoUITests.swift */; };
+		D66B0A3F1D664C0E00101CAC /* FSM.swift in Sources */ = {isa = PBXBuildFile; fileRef = D66B0A3E1D664C0E00101CAC /* FSM.swift */; };
+		D66B0A411D664C6300101CAC /* RecorderDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = D66B0A401D664C6300101CAC /* RecorderDelegate.swift */; };
+		D66B0A431D664C9600101CAC /* GameDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = D66B0A421D664C9600101CAC /* GameDelegate.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -53,6 +56,9 @@
 		D6533E5D1D65379800B7120F /* ReplayKitDemoUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = ReplayKitDemoUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		D6533E611D65379800B7120F /* ReplayKitDemoUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReplayKitDemoUITests.swift; sourceTree = "<group>"; };
 		D6533E631D65379800B7120F /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		D66B0A3E1D664C0E00101CAC /* FSM.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = FSM.swift; sourceTree = "<group>"; };
+		D66B0A401D664C6300101CAC /* RecorderDelegate.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = RecorderDelegate.swift; sourceTree = "<group>"; };
+		D66B0A421D664C9600101CAC /* GameDelegate.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = GameDelegate.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -107,6 +113,9 @@
 				D6533E3D1D65379800B7120F /* GameScene.sks */,
 				D6533E3F1D65379800B7120F /* Actions.sks */,
 				D6533E411D65379800B7120F /* GameScene.swift */,
+				D66B0A3E1D664C0E00101CAC /* FSM.swift */,
+				D66B0A401D664C6300101CAC /* RecorderDelegate.swift */,
+				D66B0A421D664C9600101CAC /* GameDelegate.swift */,
 				D6533E431D65379800B7120F /* GameViewController.swift */,
 				D6533E451D65379800B7120F /* Main.storyboard */,
 				D6533E481D65379800B7120F /* Assets.xcassets */,
@@ -271,7 +280,10 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				D66B0A431D664C9600101CAC /* GameDelegate.swift in Sources */,
 				D6533E421D65379800B7120F /* GameScene.swift in Sources */,
+				D66B0A411D664C6300101CAC /* RecorderDelegate.swift in Sources */,
+				D66B0A3F1D664C0E00101CAC /* FSM.swift in Sources */,
 				D6533E441D65379800B7120F /* GameViewController.swift in Sources */,
 				D6533E3C1D65379800B7120F /* AppDelegate.swift in Sources */,
 			);
@@ -520,6 +532,7 @@
 				D6533E681D65379800B7120F /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 		D6533E691D65379800B7120F /* Build configuration list for PBXNativeTarget "ReplayKitDemoTests" */ = {
 			isa = XCConfigurationList;
@@ -528,6 +541,7 @@
 				D6533E6B1D65379800B7120F /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 		D6533E6C1D65379800B7120F /* Build configuration list for PBXNativeTarget "ReplayKitDemoUITests" */ = {
 			isa = XCConfigurationList;
@@ -536,6 +550,7 @@
 				D6533E6E1D65379800B7120F /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 	};
