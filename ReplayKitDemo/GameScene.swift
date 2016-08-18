@@ -12,6 +12,8 @@ import GameplayKit
 protocol GameDelegate : class {
     func showRecordButton()
     func showStopButton()
+    func buttonTouch(_ touch : UITouch) -> Bool
+    func enterState(_ state: MSReplayKitState.Type)
 }
 
 class MSReplayKitState : GKState {
@@ -20,21 +22,113 @@ class MSReplayKitState : GKState {
         self.gameDelegate = gameDelegate
     }
     
+    //
+    // return true if the state consumed the touchesBegan
+    //
+    func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) -> Bool {
+        return false
+    }
+    //
+    // return true if the state consumed the touchesBegan
+    //
+    func touchesMoved(_ touches: Set<UITouch>, with event: UIEvent?) -> Bool {
+        return false
+    }
+    
+    //
+    // return true if the state consumed the touchesEnded
+    //
+    func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent?) -> Bool {
+        return false
+    }
+    
+    //
+    // return true if the state consumed the touchesCancelled
+    //
+    func touchesCancelled(_ touches: Set<UITouch>, with event: UIEvent?) -> Bool {
+        return false
+    }
+
+    
 }
 
 class MSWaitRecordState : MSReplayKitState {
+    override func didEnter(from previousState: GKState?) {
+        gameDelegate.showRecordButton()
+    }
+    
+    override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) -> Bool {
+        for t in touches {
+            if gameDelegate.buttonTouch(t) {
+                gameDelegate.enterState(MSRecordButtonDownState.self)
+                return true
+            }
+        }
+        return false
+    }
     
 }
 
 class MSRecordButtonDownState : MSReplayKitState {
     
+    override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) -> Bool {
+        return true
+    }
+    override func touchesMoved(_ touches: Set<UITouch>, with event: UIEvent?) -> Bool {
+        return true
+    }
+    override func touchesCancelled(_ touches: Set<UITouch>, with event: UIEvent?) -> Bool {
+        gameDelegate.enterState(MSWaitRecordState.self)
+        return true
+    }
+    override func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent?) -> Bool {
+        for t in touches {
+            if gameDelegate.buttonTouch(t) {
+                gameDelegate.enterState(MSRecordingState.self)
+                break
+            }
+        }
+        return true
+    }
+    
 }
 
 class MSRecordingState : MSReplayKitState {
+    override func didEnter(from previousState: GKState?) {
+        gameDelegate.showStopButton()
+    }
+    override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) -> Bool {
+        for t in touches {
+            if gameDelegate.buttonTouch(t) {
+                gameDelegate.enterState(MSStopButtonDownState.self)
+                return true
+            }
+        }
+        return false
+    }
     
 }
 
 class MSStopButtonDownState : MSReplayKitState {
+    override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) -> Bool {
+        return true
+    }
+    override func touchesMoved(_ touches: Set<UITouch>, with event: UIEvent?) -> Bool {
+        return true
+    }
+    override func touchesCancelled(_ touches: Set<UITouch>, with event: UIEvent?) -> Bool {
+        gameDelegate.enterState(MSRecordingState.self)
+        return true
+    }
+    override func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent?) -> Bool {
+        for t in touches {
+            if gameDelegate.buttonTouch(t) {
+                gameDelegate.enterState(MSWaitRecordState.self)
+                break
+            }
+        }
+        return true
+    }
     
 }
 
@@ -98,7 +192,7 @@ class GameScene: SKScene, GameDelegate {
             }
         }
         // initialize state machine
-        
+        initStateMachine()
     }
     
     func showButtons(record: Bool, stop: Bool) {
@@ -110,13 +204,6 @@ class GameScene: SKScene, GameDelegate {
         }
     }
     
-    func showStopButton() {
-        showButtons(record: false, stop: true)
-    }
-    func showRecordButton() {
-        showButtons(record: true, stop: false)
-    }
-    
     func initStateMachine() {
         self.stateMachine = GKStateMachine(states: [
             MSWaitRecordState(gameDelegate: self),
@@ -126,6 +213,8 @@ class GameScene: SKScene, GameDelegate {
             MSPreviewingState(gameDelegate: self),
             
             ])
+        
+        self.stateMachine.enter(MSWaitRecordState.self)
         
     }
     
@@ -155,6 +244,11 @@ class GameScene: SKScene, GameDelegate {
     }
     
     override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
+        if let currentState = stateMachine.currentState as? MSReplayKitState {
+            if currentState.touchesBegan(touches, with: event) {
+                return
+            }
+        }
         if let label = self.label {
             label.run(SKAction.init(named: "Pulse")!, withKey: "fadeInOut")
         }
@@ -163,14 +257,29 @@ class GameScene: SKScene, GameDelegate {
     }
     
     override func touchesMoved(_ touches: Set<UITouch>, with event: UIEvent?) {
+        if let currentState = stateMachine.currentState as? MSReplayKitState {
+            if currentState.touchesMoved(touches, with: event) {
+                return
+            }
+        }
         for t in touches { self.touchMoved(toPoint: t.location(in: self)) }
     }
     
     override func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent?) {
+        if let currentState = stateMachine.currentState as? MSReplayKitState {
+            if currentState.touchesMoved(touches, with: event) {
+                return
+            }
+        }
         for t in touches { self.touchUp(atPoint: t.location(in: self)) }
     }
     
     override func touchesCancelled(_ touches: Set<UITouch>, with event: UIEvent?) {
+        if let currentState = stateMachine.currentState as? MSReplayKitState {
+            if currentState.touchesMoved(touches, with: event) {
+                return
+            }
+        }
         for t in touches { self.touchUp(atPoint: t.location(in: self)) }
     }
     
@@ -178,4 +287,27 @@ class GameScene: SKScene, GameDelegate {
     override func update(_ currentTime: TimeInterval) {
         // Called before each frame is rendered
     }
+    
+    // game delegate
+    
+    func showStopButton() {
+        showButtons(record: false, stop: true)
+    }
+    func showRecordButton() {
+        showButtons(record: true, stop: false)
+    }
+    func buttonTouch(_ touch : UITouch) -> Bool {
+        let pos = touch.location(in: self)
+        for n in self.nodes(at: pos) {
+            if n == self.stopButton || n == self.recordButton {
+                return true
+            }
+        }
+        return false
+    }
+    func enterState(_ state: MSReplayKitState.Type) {
+        self.stateMachine.enter(state)
+    }
+    
+
 }
